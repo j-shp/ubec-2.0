@@ -10,17 +10,19 @@ def main(page):
     page.adaptive = True
 
     page.appbar = ft.AppBar(
-        leading=ft.TextButton("New", style=ft.ButtonStyle(padding=0,color="#FFD700")),
-        title=ft.Text("Translator"),
-        actions=[
-            ft.IconButton(ft.cupertino_icons.ADD, style=ft.ButtonStyle(padding=0, color="#FFD700"))
-        ],
-        bgcolor=ft.Colors.with_opacity(0.04, ft.CupertinoColors.SYSTEM_BACKGROUND),
+        #leading=ft.TextButton("New", style=ft.ButtonStyle(padding=0,color="#FFD700")),
+        bgcolor="#4B371C",
+        title=ft.Text("OtherTongue", color="#FFD700"),
+        #actions=[
+        #    ft.IconButton(ft.cupertino_icons.ADD, style=ft.ButtonStyle(padding=0, color="#FFD700"))
+        #],
+        #bgcolor=ft.Colors.with_opacity(0.04, ft.CupertinoColors.SYSTEM_BACKGROUND),
     )
 
     page.navigation_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationBarDestination(icon=ft.Icons.IMAGE_OUTLINED, label="Upload Image", bgcolor="#D2691E"),
+            ft.NavigationBarDestination(icon=ft.Icons.IMAGE_OUTLINED, label="Upload Image", bgcolor="#D2691E", visible=False
+                ),
             # ft.NavigationBarDestination(
             #    icon=ft.Icons.BOOKMARK_BORDER,
             #    selected_icon=ft.Icons.BOOKMARK,
@@ -134,15 +136,18 @@ def main(page):
                 ),
             ),
             ft.Container(content=g, alignment=ft.alignment.center),
-            ft.ElevatedButton(
-                "Select files...",
-                icon=ft.Icons.FOLDER_OPEN,
+            ft.Container(
+                content=ft.ElevatedButton(
+                "Upload Image",
+                icon=ft.Icons.IMAGE_OUTLINED,
                 icon_color="#FFD700",
                 on_click=select_callback,
                 style=ft.ButtonStyle(color="#FFD700",
                                      bgcolor="#432616",
                                      shadow_color="#DAA520",
                                      surface_tint_color="#FFD700")
+            ), padding=ft.padding.only(left=10, top=10),
+            alignment=ft.alignment.top_left,
             ),
             ],
             )
