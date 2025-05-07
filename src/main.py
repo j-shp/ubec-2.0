@@ -10,25 +10,29 @@ def main(page):
     page.adaptive = True
 
     page.appbar = ft.AppBar(
-        leading=ft.TextButton("New", style=ft.ButtonStyle(padding=0)),
-        title=ft.Text("Lol"),
+        leading=ft.TextButton("New", style=ft.ButtonStyle(padding=0,color="#FFD700")),
+        title=ft.Text("Translator"),
         actions=[
-            ft.IconButton(ft.cupertino_icons.ADD, style=ft.ButtonStyle(padding=0))
+            ft.IconButton(ft.cupertino_icons.ADD, style=ft.ButtonStyle(padding=0, color="#FFD700"))
         ],
         bgcolor=ft.Colors.with_opacity(0.04, ft.CupertinoColors.SYSTEM_BACKGROUND),
     )
 
     page.navigation_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationBarDestination(icon=ft.Icons.IMAGE_OUTLINED, label="Upload Image"),
+            ft.NavigationBarDestination(icon=ft.Icons.IMAGE_OUTLINED, label="Upload Image", bgcolor="#D2691E"),
             # ft.NavigationBarDestination(
             #    icon=ft.Icons.BOOKMARK_BORDER,
             #    selected_icon=ft.Icons.BOOKMARK,
             #    label="Bookmark",
             #),
         ],
+        height=65,
+        bgcolor="#4B371C",
+        surface_tint_color="#FFD700",
+        selected_index=0,
         border=ft.Border(
-            top=ft.BorderSide(color=ft.CupertinoColors.SYSTEM_GREY2, width=0)
+            top=ft.BorderSide(color="#4B371C", width=0)
         ),
     )
 
@@ -90,14 +94,32 @@ def main(page):
                 expand=True,
                 fit=ft.ImageFit.CONTAIN, 
                 )
+    # Get absolute path to GIF
+    gif_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ubec", "komorebi.gif"))
+    
     page.add(
         ft.SafeArea(
             ft.Stack(
-            [ft.Container(
+            [
+                # Background GIF as first layer
+                ft.Container(
+                    content=ft.Image(
+                        src=gif_path,
+                        width=page.width,
+                        height=page.height,
+                        fit=ft.ImageFit.COVER,
+                        opacity=0.2
+                    ),
+                    width=page.width,
+                    height=page.height,
+                ),
+                ft.Container(
                 gradient=ft.LinearGradient(
                         begin=ft.alignment.top_center,
                         end=ft.alignment.bottom_center,
-                    colors=[ft.Colors.BLUE, ft.Colors.YELLOW],
+                    colors=[ft.colors.with_opacity(0.15, "#8B4513"),  # Saddle Brown
+                            ft.colors.with_opacity(0.1, "#D2691E"),   # Chocolate Brown
+                            ],
                     ),
                 content=ft.Column(
                     [
@@ -115,7 +137,12 @@ def main(page):
             ft.ElevatedButton(
                 "Select files...",
                 icon=ft.Icons.FOLDER_OPEN,
+                icon_color="#FFD700",
                 on_click=select_callback,
+                style=ft.ButtonStyle(color="#FFD700",
+                                     bgcolor="#432616",
+                                     shadow_color="#DAA520",
+                                     surface_tint_color="#FFD700")
             ),
             ],
             )
