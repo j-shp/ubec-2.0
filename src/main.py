@@ -8,11 +8,11 @@ def main(page):
     upload_button = ft.Ref[ft.ElevatedButton]()
 
     page.adaptive = True
-
+    page.bgcolor = "#2C1810"
     page.appbar = ft.AppBar(
         #leading=ft.TextButton("New", style=ft.ButtonStyle(padding=0,color="#FFD700")),
         bgcolor="#4B371C",
-        title=ft.Text("OtherTongue", color="#FFD700"),
+        title=ft.Text("༄˖°.🍂.ೃ࿔*:･ [ OtherTongue ] ༄˖°.🍂.ೃ࿔*:･", color="#FFD700"), center_title=True,
         #actions=[
         #    ft.IconButton(ft.cupertino_icons.ADD, style=ft.ButtonStyle(padding=0, color="#FFD700"))
         #],
@@ -91,10 +91,12 @@ def main(page):
         g.src = f"UNIQoutput{counter}.jpg"
         page.update()
     g = ft.Image(src=f"UNIQoutput{counter}.jpg",
-                width=page.width * 0.8,
-                height=page.height * 0.8,
+                width=page.width * 0.6,
+                height=page.height * 0.6,
                 expand=True,
-                fit=ft.ImageFit.CONTAIN, 
+                fit=ft.ImageFit.CONTAIN,
+                opacity=1,
+                animate_opacity=1000,
                 )
     # Get absolute path to GIF
     gif_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ubec", "komorebi.gif"))
@@ -110,7 +112,7 @@ def main(page):
                         width=page.width,
                         height=page.height,
                         fit=ft.ImageFit.COVER,
-                        opacity=0.2
+                        opacity=0.2,
                     ),
                     width=page.width,
                     height=page.height,
@@ -143,7 +145,7 @@ def main(page):
                 icon_color="#FFD700",
                 on_click=select_callback,
                 style=ft.ButtonStyle(color="#FFD700",
-                                     bgcolor="#432616",
+                                     bgcolor="#2E1503",
                                      shadow_color="#DAA520",
                                      surface_tint_color="#FFD700")
             ), padding=ft.padding.only(left=10, top=10),
