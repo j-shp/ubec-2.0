@@ -25,19 +25,9 @@ def load_reference_shapes(folder_path):
 
 def process_image(image_path, reference_shapes):
     img = cv2.imread(image_path)
-
-    # Calculate scaling factor to fit screen
-    max_width = 1600  # Leave some margin
-    max_height = 900  # Leave some margin
-    scale = min(max_width / img.shape[1], max_height / img.shape[0])
-    if scale < 1:  # Only scale down, not up
-        width = int(img.shape[1] * scale)
-        height = int(img.shape[0] * scale)
-        img = cv2.resize(img, (width, height))
-
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-     # Try both normal and inverted thresholds
+    # Try both normal and inverted thresholds
     _, thresh_normal = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
     _, thresh_inv = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
     
@@ -49,7 +39,7 @@ def process_image(image_path, reference_shapes):
     contours = contours_normal if len(contours_normal) > len(contours_inv) else contours_inv
     
     # Filter small contours
-    min_area = 100  # Adjust this value based on your scaled image
+    min_area = 200  # Adjust this value based on your image size
     contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_area]
     
     print(f"Found {len(contours)} potential symbols")
