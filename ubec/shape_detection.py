@@ -1,86 +1,118 @@
-import cv2 # OpenCV Library
+import cv2  # OpenCV Library
 import tkinter as tk
+import numpy as np
 from tkinter import filedialog
+import os
+from typing import Any
+
+def get_project_root():
+    """Get the absolute path to the project root directory"""
+    current_file = os.path.abspath(__file__)  # Get the path to this file
+    return os.path.dirname(os.path.dirname(current_file))  # Go up two levels
+
+def load_reference_shapes(folder_name: str) -> dict[str, np.ndarray[Any, np.dtype[np.float64]]]:
+    """Load reference shapes from the shapes folder in project root"""
+    project_root = get_project_root()
+    folder_path = os.path.join(project_root, folder_name)
+    
+    # Check if folder existss
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(f"Shapes folder not found at {folder_path}")
+    
+    reference_shapes: dict[str, np.ndarray[Any, np.dtype[np.float64]]] = {}
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".png"):
+            label = os.path.splitext(filename)[0]
+            ref_image_path = os.path.join(folder_path, filename)
+            
+            # Check if file exists
+            if not os.path.exists(ref_image_path):
+                print(f"Warning: Reference image {filename} not found")
+                continue
+                
+            ref_image = cv2.imread(ref_image_path, cv2.IMREAD_GRAYSCALE)
+
+            _, ref_thresh = cv2.threshold(ref_image, 127, 255, cv2.THRESH_BINARY)
+            ref_contours, _ = cv2.findContours(ref_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            if ref_contours:
+                reference_shapes[label] = np.array(ref_contours[0], dtype=np.float64)
+            else:
+                print(f"Warning: No contours found in {filename}")
+    
+    if not reference_shapes:
+        raise ValueError("No reference shapes were loaded")
+        
+    return reference_shapes
 
 def process_image(image_path: str) -> None:
+    # Load reference shape contours from folder
+    reference_shapes: dict[str, np.ndarray[Any, np.dtype[np.float64]]] = load_reference_shapes("ubec//shapes")
+
     # Read the image
     image = cv2.imread(filename=image_path)
 
-    # Convert to grayscale
-    gray_image = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
-    
-    # Preproccessing
-    gray_image = cv2.GaussianBlur(src=gray_image, ksize=(5, 5), sigmaX=0)
-    
-    kernel = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(3,3))
-    gray_image = cv2.morphologyEx(src=gray_image, op=cv2.MORPH_CLOSE, kernel=kernel)
-    
-    # Setting threshold value to get new image (In simpler terms: this function checks every pixel, and depending on how
-    # dark the pixel is, the threshold value will convert the pixel to either black or white (0 or 1)).
+    # Convert to grayscale if not already
+    if len(image.shape) == 3:
+        gray_image = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
+    else:
+        gray_image = image
+    # Thresholding
     _, thresh_image = cv2.threshold(src=gray_image, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
 
-    # Retrieving outer-edge coordinates in the new threshold image
-    contours, _ = cv2.findContours(image=thresh_image, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)
+     # Find contours - use RETR_EXTERNAL to only get outer contours
+    contours, _ = cv2.findContours(
+        image=thresh_image, 
+        mode=cv2.RETR_EXTERNAL, 
+        method=cv2.CHAIN_APPROX_SIMPLE
+    )
 
-    # Iterating through each contour to retrieve coordinates of each shape
-    for i, contour in enumerate(contours):
-        if i == 0:
-            continue
+     # Filter contours by area to remove noise
+    min_area = 100  # Adjust this value based on your text size
+    contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_area]
+    
+    total_contours = len(contours)
+    print(f"Total text components detected: {total_contours}")
 
-        # The 2 lines below this comment will approximate the shape we want. The reason being that in certain cases the
-        # shape we want might have flaws or might be imperfect, and so, for example, if we have a rectangle with a
-        # small piece missing, the program will still count it as a rectangle. The epsilon value will specify the
-        # precision in which we approximate our shape.
-        epsilon = 0.02*cv2.arcLength(curve=contour, closed=True)
-        approx = cv2.approxPolyDP(curve=contour, epsilon=epsilon, closed=True)
+     # Create a copy for visualization
+    result_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
+    cv2.putText(result_image, f"Total components: {total_contours}", 
+                (10, 30), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 0, 255), 1)
 
-        # Drawing the outer-edges onto the image
-        cv2.drawContours(image=image, contours=[contour], contourIdx=0, color=(0, 0, 0), thickness=4)
+    for _, contour in enumerate(contours):
+        # Get bounding rectangle
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # Draw rectangle around text component
+        cv2.rectangle(result_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
+        # Compare with reference shapes
+        best_match = None
+        lowest_score = float('inf')
 
-        # Retrieving coordinates of the contour so that we can put text over the shape.
-        x, y, w, h= cv2.boundingRect(array=approx)
-        x_mid = int(x + (w/3)) # This is an estimation of where the middle of the shape is in terms of the x-axis.
-        y_mid = int(y + (h/1.5)) # This is an estimation of where the middle of the shape is in terms of the y-axis.
+        for label, ref_contour in reference_shapes.items():
+            score = cv2.matchShapes(contour, ref_contour, cv2.CONTOURS_MATCH_I1, 0.0)
+            if score < lowest_score:
+                lowest_score = score
+                best_match = label
 
-        # Setting some variables which will be used to display text on the final image
-        coords = (x_mid, y_mid)
-        color = (0, 0, 0)
-        font = cv2.FONT_HERSHEY_DUPLEX
+        # Label the text component
+        if best_match and lowest_score < 0.15:  # Adjust threshold as needed
+            cv2.putText(result_image, best_match, 
+                       (x, y - 10), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 0, 0), 1)
 
-        # This is the part where we actually guess which shape we have detected. The program will look at the amount of edges
-        # the contour/shape has, and then based on that result the program will guess the shape (for example, if it has 3 edges
-        # then the chances that the shape is a triangle are very good.)
-        #
-        # You can add more shapes if you want by checking more lenghts, but for the simplicity of this tutorial program I
-        # have decided to only detect 5 shapes.
-        if len(approx) == 3:
-            cv2.putText(image, "Triangle", coords, font, 1, color, 1) # Text on the image
-        elif len(approx) == 4:
-            cv2.putText(image, "Quadrilateral", coords, font, 1, color, 1)
-        elif len(approx) == 5:
-            cv2.putText(image, "Pentagon", coords, font, 1, color, 1)
-        elif len(approx) == 6:
-            cv2.putText(image, "Hexagon", coords, font, 1, color, 1)
-
-    # Display the frame
-    cv2.imshow(winname="shapes_detected", mat=image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # Save the result
+    output_path = os.path.join(os.path.dirname(image_path), "detected_text.png")
+    cv2.imwrite(output_path, result_image)
+    print(f"Result saved to: {output_path}")
 
 def select_image() -> None:
-    # Hide the main Tkinter window
     root = tk.Tk()
     root.withdraw()
-    
-    # Open file dialog
     file_path = filedialog.askopenfilename(
         title="Select an image",
-        filetypes=[
-            ("Image files", "*.png *.jpg *.jpeg *.bmp *.gif"),
-            ("All files", "*.*")
-        ]
+        filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif"), ("All files", "*.*")]
     )
-    
     if file_path:
         process_image(file_path)
 
