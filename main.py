@@ -37,11 +37,11 @@ def main(page):
         if file_picker.result and file_picker.result.files:
             os.makedirs("uploads", exist_ok=True)
             for f in file_picker.result.files:
-                save_path = os.path.join("uploads\\", f.name)  # Automatically handles slashes
-                with open(save_path, "wb") as file:
-                    file.write(src.read())   # Save file locally
+                save_path = os.path.join("uploads", f.name)  # Automatically handles slashes
+                with open(f.path, "rb") as src, open(save_path, "wb") as dest:
+                    dest.write(src.read())  # Read and write file manually
         page.update()
-
+   
 #file_picker = ft.FilePicker(on_result=upload_files)
 #page.overlay.append(file_picker)
 
