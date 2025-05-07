@@ -27,6 +27,9 @@ def process_image(image_path, reference_shapes):
     img = cv2.imread(image_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+     # Improve image preprocessing
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)  # Remove noise
+
     # Try both normal and inverted thresholds
     _, thresh_normal = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
     _, thresh_inv = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
@@ -60,9 +63,19 @@ def process_image(image_path, reference_shapes):
             cv2.putText(img, best_match, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 
                         0.7, (255, 0, 0), 2)
 
-    cv2.imshow("Detected Shapes", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    output_folder = os.path.join(get_project_root(), "saves")
+    
+    # Create output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Generate output filename based on input filename
+    input_filename = os.path.basename(image_path)
+    output_filename = f"detected_{input_filename}"
+    output_path = os.path.join(output_folder, output_filename)
+    
+    # Save the processed image
+    cv2.imwrite(output_path, img)
 
 def select_and_run():
     root = Tk()
