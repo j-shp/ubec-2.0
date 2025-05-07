@@ -73,7 +73,7 @@ def select_and_run(counter):
         return
 
     # Use fixed path relative to project root
-    shapes_folder = os.path.join(get_project_root(), "src\shapes")
+    shapes_folder = os.path.join(get_project_root(), "ubec\shapes")
     if not os.path.exists(shapes_folder):
         print(f"Error: Shapes folder not found at {shapes_folder}")
         return
