@@ -114,7 +114,7 @@ def main(page):
     page.navigation_bar = ft.NavigationBar(
         on_change=change_content,
         destinations=[
-            ft.NavigationBarDestination(icon=ft.Icons.IMAGE_OUTLINED, label="Upload Image", bgcolor="#D2691E", visible=False),
+            ft.NavigationBarDestination(icon=ft.Icons.IMAGE_OUTLINED, label="Upload Image", bgcolor="#D2691E"),
             ft.NavigationBarDestination(
                 icon=ft.Icons.BROWSE_GALLERY_OUTLINED,
                 label="Translated",
