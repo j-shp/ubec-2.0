@@ -1,6 +1,5 @@
 import cv2
 import os
-import numpy as np
 from tkinter import filedialog, Tk
 
 def get_project_root():
